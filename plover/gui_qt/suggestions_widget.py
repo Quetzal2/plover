@@ -27,7 +27,7 @@ class SuggestionsWidget(QWidget, Ui_SuggestionsWidget):
         self._strokes_char_format = QTextCharFormat()
         self._strokes_char_format.font().setStyleHint(QFont.Monospace)
 
-    def append(self, suggestion_list):
+    def append(self, suggestion_list, keep_position=False):
         scrollbar = self.suggestions.verticalScrollBar()
         scroll_at_end = scrollbar.value() == scrollbar.maximum()
         cursor = self.suggestions.textCursor()
@@ -46,8 +46,9 @@ class SuggestionsWidget(QWidget, Ui_SuggestionsWidget):
                 cursor.block().setUserState(self.STYLE_STROKES)
                 cursor.insertText('   ' + '/'.join(strokes_list))
         cursor.insertText('\n')
-        # Keep current position when not at the end of the document.
-        if scroll_at_end:
+        # Keep current position when not at the end of the document, or if the argument says so
+        # Otherwise, scroll the window down to keep the new suggestions in view
+        if scroll_at_end and not keep_position:
             scrollbar.setValue(scrollbar.maximum())
 
     def clear(self):
