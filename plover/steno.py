@@ -38,10 +38,9 @@ def normalize_stroke(stroke):
             stroke = stroke.replace('-', '')
     return stroke
 
-def normalize_steno(strokes_string):
-    """Convert steno strings to one common form."""
-    return tuple(normalize_stroke(stroke) for stroke
-                 in strokes_string.split(STROKE_DELIMITER))
+def normalize_steno(strokes_string, split=str.split):
+    """ Convert steno strings to one common tuple-based form for use as dictionary keys. """
+    return tuple(map(normalize_stroke, split(strokes_string, STROKE_DELIMITER)))
 
 def sort_steno_keys(steno_keys):
     return sorted(steno_keys, key=lambda x: system.KEY_ORDER.get(x, -1))
