@@ -11,6 +11,7 @@ Stroke -- A data model class that encapsulates a sequence of steno keys.
 
 """
 
+from itertools import repeat
 import re
 
 from plover import system
@@ -41,6 +42,15 @@ def normalize_stroke(stroke):
 def normalize_steno(strokes_string, split=str.split):
     """ Convert steno strings to one common tuple-based form for use as dictionary keys. """
     return tuple(map(normalize_stroke, split(strokes_string, STROKE_DELIMITER)))
+
+def normalize_steno_iter(s_iter):
+    """ Optimized routine for normalizing a large sequence of steno strings from an iterator. """
+    class MemoDict(dict):
+        def __missing__(self, key, f=normalize_stroke):
+            self[key] = ret = f(key)
+            return ret
+    string_list_iter = map(str.split, s_iter, repeat(STROKE_DELIMITER))
+    return map(tuple, map(map, repeat(MemoDict().__getitem__), string_list_iter))
 
 def sort_steno_keys(steno_keys):
     return sorted(steno_keys, key=lambda x: system.KEY_ORDER.get(x, -1))
