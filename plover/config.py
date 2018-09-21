@@ -32,6 +32,9 @@ OUTPUT_CONFIG_SECTION = 'Output Configuration'
 DEFAULT_UNDO_LEVELS = 100
 MINIMUM_UNDO_LEVELS = 1
 
+DEFAULT_SEARCH_LIMIT = 5
+MINIMUM_SEARCH_LIMIT = 1
+
 DEFAULT_SYSTEM_NAME = 'English Stenotype'
 
 SYSTEM_CONFIG_SECTION = 'System: %s'
@@ -342,6 +345,8 @@ class Config:
         boolean_option('start_minimized', False, 'Startup', 'Start Minimized'),
         boolean_option('show_stroke_display', False, 'Stroke Display', 'show'),
         boolean_option('show_suggestions_display', False, 'Suggestions Display', 'show'),
+        int_option('search_display_limit', DEFAULT_SEARCH_LIMIT, MINIMUM_SEARCH_LIMIT, None,
+                   'Lookup Display', 'max_results'),
         opacity_option('translation_frame_opacity', 'Translation Frame', 'opacity'),
         boolean_option('classic_dictionaries_display_order', False, 'GUI'),
         # Plugins.

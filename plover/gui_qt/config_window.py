@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from plover.config import MINIMUM_UNDO_LEVELS
+from plover.config import MINIMUM_UNDO_LEVELS, MINIMUM_SEARCH_LIMIT
 from plover.misc import expand_path, shorten_path
 from plover.registry import registry
 
@@ -282,6 +282,9 @@ class ConfigWindow(QDialog, Ui_ConfigWindow, WindowState):
                              _('Open the paper tape on startup.')),
                 ConfigOption(_('Show suggestions:'), 'show_suggestions_display', BooleanOption,
                              _('Open the suggestions dialog on startup.')),
+                ConfigOption(_('Maximum search results:'), 'search_display_limit',
+                             partial(IntOption, maximum=100, minimum=MINIMUM_SEARCH_LIMIT),
+                             _('Maximum number of search results to display in the lookup window.')),
                 ConfigOption(_('Add translation dialog opacity:'), 'translation_frame_opacity',
                              partial(IntOption, maximum=100, minimum=0),
                              _('Set the translation dialog opacity:\n'
