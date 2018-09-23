@@ -41,6 +41,7 @@ class StenoDictionary:
         self.readonly = False
         self.enabled = True
         self.path = None
+        self.contains = self._dict.__contains__
 
     def __str__(self):
         return '%s(%r)' % (self.__class__.__name__, self.path)
@@ -203,7 +204,7 @@ class StenoDictionaryCollection:
         for d in self.dicts:
             if not d.enabled:
                 continue
-            if key in d:
+            if d.contains(key):
                 value = d[key]
                 for f in self.filters:
                     if f(key, value):
@@ -230,7 +231,7 @@ class StenoDictionaryCollection:
                 continue
             for k in d.reverse_lookup(value):
                 # Ignore key if it's overridden by a higher priority dictionary.
-                if self._lookup(k, dicts=self.dicts[:n]) is None:
+                if not any(k in d for d in self.dicts[:n]):
                     keys.append(k)
         return keys
 
