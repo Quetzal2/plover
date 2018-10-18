@@ -11,7 +11,7 @@ import sys
 from plover.steno_dictionary import StenoDictionary, StenoDictionaryCollection
 from plover.translation import Translation, Translator, _State
 from plover.translation import escape_translation, unescape_translation
-from plover.steno import Stroke, normalize_steno
+from plover.steno import Stroke
 
 from plover_build_utils.testing import steno_to_stroke as stroke
 
@@ -66,33 +66,33 @@ class TestTranslatorStateSize:
         self.t.set_dictionary(self.dc)
 
     def test_dictionary_update_grows_size1(self):
-        self.d[('S',)] = '1'
+        self.d['S'] = '1'
         self._check_size_call(1)
 
     def test_dictionary_update_grows_size4(self):
-        self.d[('S', 'PT', '-Z', 'TOP')] = 'hi'
+        self.d['S/PT/-Z/TOP'] = 'hi'
         self._check_size_call(4)
 
     def test_dictionary_update_no_grow(self):
         self.t.set_min_undo_length(4)
         self._check_size_call(4)
         self.clear()
-        self.d[('S', 'T')] = 'nothing'
+        self.d['S/T'] = 'nothing'
         self._check_size_call(4)
 
     def test_dictionary_update_shrink(self):
-        self.d[('S', 'T', 'P', '-Z', '-D')] = '1'
+        self.d['S/T/P/-Z/-D'] = '1'
         self._check_size_call(5)
         self.clear()
-        self.d[('A', 'P')] = '2'
+        self.d['A/P'] = '2'
         self._check_no_size_call()
-        del self.d[('S', 'T', 'P', '-Z', '-D')]
+        del self.d['S/T/P/-Z/-D']
         self._check_size_call(2)
 
     def test_dictionary_update_no_shrink(self):
         self.t.set_min_undo_length(7)
-        self.d[('S', 'T', 'P', '-Z', '-D')] = '1'
-        del self.d[('S', 'T', 'P', '-Z', '-D')]
+        self.d['S/T/P/-Z/-D'] = '1'
+        del self.d['S/T/P/-Z/-D']
         self._check_size_call(7)
 
     def test_translation_calls_restrict(self):
@@ -155,7 +155,7 @@ def test_changing_state():
         output.append((undo, do, prev))
 
     d = StenoDictionary()
-    d[('S', 'P')] = 'hi'
+    d['S/P'] = 'hi'
     dc = StenoDictionaryCollection([d])
     t = Translator()
     t.set_dictionary(dc)
@@ -244,9 +244,9 @@ def test_translator():
     assert out.get() == ''
 
     out.clear()
-    d[('S',)] = 't1'
-    d[('T',)] = 't2'
-    d[('S', 'T')] = 't3'
+    d['S'] = 't1'
+    d['T'] = 't2'
+    d['S/T'] = 't3'
 
     t.translate(stroke('S'))
     assert out.get() == 't1'
@@ -272,8 +272,8 @@ def test_translator():
     t.translate(stroke('T'))
     assert out.get() == 't3 t2'
 
-    d[('S', 'T', 'T')] = 't4'
-    d[('S', 'T', 'T', 'S')] = 't5'
+    d['S/T/T'] = 't4'
+    d['S/T/T/S'] = 't5'
 
     t.translate(stroke('S'))
     assert out.get() == 't5'
@@ -422,7 +422,7 @@ class TestTranslateStroke:
     def t(self, strokes):
         """A quick way to make a translation."""
         strokes = [stroke(x) for x in strokes.split('/')]
-        key = tuple(s.rtfcre for s in strokes)
+        key = "/".join(s.rtfcre for s in strokes)
         translation = self.dc.lookup(key)
         return Translation(strokes, translation)
 
@@ -431,7 +431,6 @@ class TestTranslateStroke:
         return [self.t(x) for x in translations.split()]
 
     def define(self, key, value):
-        key = normalize_steno(key)
         self.d[key] = value
 
     def translate(self, steno):
@@ -713,12 +712,12 @@ class TestTranslateStroke:
     def test_retrospective_toggle_asterisk_replaced1(self):
         self.define('P-P', '{.}')
         self.define('SKEL', 'cancel')
-        self.define('SKEL/TO-PB', 'skeleton')
+        self.define('SKEL/TOPB', 'skeleton')
         self.define('SKEL/TO*PB', 'not skeleton!')
         self.define('A*', '{*}')
         self.translate('P-P')
         self.translate('SKEL')
-        self.translate('TO-PB')
+        self.translate('TOPB')
         self.translate('A*')
         self._check_translations(self.lt('SKEL/TO*PB'))
         self._check_output(self.lt('SKEL/TO-PB'),
@@ -728,12 +727,12 @@ class TestTranslateStroke:
     def test_retrospective_toggle_asterisk_replaced2(self):
         self.define('P-P', '{.}')
         self.define('SKEL', 'cancel')
-        self.define('SKEL/TO-PB', 'skeleton')
+        self.define('SKEL/TOPB', 'skeleton')
         self.define('TO*PB', '{^ton}')
         self.define('A*', '{*}')
         self.translate('P-P')
         self.translate('SKEL')
-        self.translate('TO-PB')
+        self.translate('TOPB')
         self.translate('A*')
         self._check_translations(self.lt('SKEL TO*PB'))
         self._check_output(self.lt('SKEL/TO-PB'),

@@ -24,6 +24,8 @@ from plover.steno_dictionary import StenoDictionaryCollection
 from plover.registry import registry
 from plover import system
 
+# The maximum acceptable number of strokes (i.e. the key) for a dictionary entry. 10 is more than reasonable.
+KEY_STROKE_LIMIT = 10
 
 _ESCAPE_RX = re.compile('(\\\\[nrt]|[\n\r\t])')
 _ESCAPE_REPLACEMENTS = {
@@ -326,10 +328,9 @@ class Translator:
         # dictionary provides a limit to how many strokes we need to try lookups on.
         num_strokes = 1
         translation_count = 0
-        stroke_limit = self._dictionary.longest_key
         for t in reversed(self._state.translations):
             num_strokes += len(t)
-            if num_strokes > stroke_limit:
+            if num_strokes > KEY_STROKE_LIMIT:
                 break
             translation_count += 1
         translation_index = len(self._state.translations) - translation_count
@@ -338,6 +339,7 @@ class Translator:
         rtfcre_list = [s for t in translations for s in t.rtfcre]
         rtfcre_list.append(stroke.rtfcre)
         lookup = self._dictionary.lookup
+        stroke_join = "/".join
         # Look for translations in this order: with no modifications; with folded suffixes; with folded prefixes.
         for mode in filter(None, (normal, suffixes, prefixes)):
             if mode is suffixes:
@@ -352,7 +354,7 @@ class Translator:
             test_seq = rtfcre_list[:]
             for i in range(translation_count+1):
                 if mode is normal:
-                    mapping = lookup(tuple(test_seq))
+                    mapping = lookup(stroke_join(test_seq))
                 elif mode is suffixes:
                     mapping = self._lookup_affixes(test_seq, last_stroke_mods)
                 else:
@@ -378,7 +380,8 @@ class Translator:
     def lookup(self, strokes, suffixes=()):
         """ Public lookup method for a sequence of Stroke objects, with optional suffixes to account for. """
         rtfcre_list = [s.rtfcre for s in strokes]
-        result = self._dictionary.lookup(tuple(rtfcre_list))
+        rtfcre = "/".join(rtfcre_list)
+        result = self._dictionary.lookup(rtfcre)
         if result is not None:
             return result
         if suffixes:
@@ -401,12 +404,12 @@ class Translator:
         for key, removed in test_pairs:
             # Removing the key from the test stroke must produce a valid dictionary entry.
             test_seq[test_index] = removed
-            dict_key = tuple(test_seq)
+            dict_key = "/".join(test_seq)
             main_mapping = lookup(dict_key)
             if main_mapping is None:
                 continue
             # The key itself must also produce a valid dictionary entry
-            dict_key = (Stroke([key]).rtfcre,)
+            dict_key = Stroke([key]).rtfcre
             affix_mapping = lookup(dict_key)
             if affix_mapping is None:
                 continue

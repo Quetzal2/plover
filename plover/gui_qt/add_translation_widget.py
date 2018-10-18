@@ -222,7 +222,7 @@ class AddTranslationWidget(QWidget, Ui_AddTranslationWidget):
     def on_strokes_edited(self):
         strokes = self._strokes()
         if strokes:
-            translation = self._engine.raw_lookup(strokes)
+            translation = self._engine.raw_lookup('/'.join(strokes))
             if translation is not None:
                 fmt = _('{strokes} maps to {translation}')
             else:
@@ -254,7 +254,7 @@ class AddTranslationWidget(QWidget, Ui_AddTranslationWidget):
             if self._reverse_order:
                 index = -index - 1
             dictionary = self._dictionaries[index]
-            old_translation = self._engine.dictionaries[dictionary.path].get(strokes)
+            old_translation = self._engine.dictionaries[dictionary.path].get('/'.join(strokes))
             self._engine.add_translation(strokes, translation,
                                          dictionary_path=dictionary.path)
             return dictionary, strokes, old_translation, translation

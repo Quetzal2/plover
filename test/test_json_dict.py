@@ -15,12 +15,12 @@ from . import parametrize
 
 
 LOAD_TESTS = (
-    lambda: ('{"S": "a"}', {('S', ): 'a'}),
+    lambda: ('{"S": "a"}', {'S': 'a'}),
     # Default encoding is utf-8.
-    lambda: ('{"S": "café"}', {('S', ): 'café'}),
+    lambda: ('{"S": "café"}', {'S': 'café'}),
     # But if that fails, the implementation
     # must automatically retry with latin-1.
-    lambda: ('{"S": "café"}'.encode('latin-1'), {('S', ): 'café'}),
+    lambda: ('{"S": "café"}'.encode('latin-1'), {'S': 'café'}),
     # Invalid JSON.
     lambda: ('{"foo", "bar",}', ValueError),
     # Invalid JSON.

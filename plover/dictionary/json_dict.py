@@ -13,7 +13,6 @@ except ImportError:
     import json
 
 from plover.steno_dictionary import StenoDictionary
-from plover.steno import normalize_steno
 
 
 class JsonDictionary(StenoDictionary):
@@ -31,7 +30,7 @@ class JsonDictionary(StenoDictionary):
         else:
             raise ValueError('\'%s\' encoding could not be determined' % (filename,))
         d = dict(json.loads(contents))
-        self.update((normalize_steno(x[0]), x[1]) for x in d.items())
+        self.update(d)
 
     def _save(self, filename):
         with open(filename, 'wb') as fp:

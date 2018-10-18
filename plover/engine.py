@@ -447,11 +447,11 @@ class StenoEngine:
 
     @with_lock
     def lookup(self, translation):
-        return self._dictionaries.lookup(translation)
+        return self._dictionaries.lookup('/'.join(translation))
 
     @with_lock
     def raw_lookup(self, translation):
-        return self._dictionaries.raw_lookup(translation)
+        return self._dictionaries.raw_lookup('/'.join(translation))
 
     @with_lock
     def reverse_lookup(self, translation):
@@ -508,7 +508,7 @@ class StenoEngine:
     def add_translation(self, strokes, translation, dictionary_path=None):
         if dictionary_path is None:
             dictionary_path = self._dictionaries.first_writable().path
-        self._dictionaries.set(strokes, translation, path=dictionary_path)
+        self._dictionaries.set('/'.join(strokes), translation, path=dictionary_path)
         self._dictionaries.save(path_list=(dictionary_path,))
 
     @property

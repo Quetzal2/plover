@@ -17,7 +17,6 @@ import codecs
 import inspect
 import re
 
-from plover.steno import normalize_steno
 from plover.steno_dictionary import StenoDictionary
 # TODO: Move dictionary format somewhere more canonical than formatting.
 from plover.formatting import META_RE
@@ -319,7 +318,7 @@ class RtfDictionary(StenoDictionary):
             styles = load_stylesheet(s)
             converter = TranslationConverter(styles)
             for m in DICT_ENTRY_PATTERN.finditer(s):
-                steno = normalize_steno(m.group('steno'))
+                steno = m.group('steno')
                 translation = m.group('translation')
                 converted = converter(translation)
                 if converted is not None:

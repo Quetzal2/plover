@@ -67,7 +67,7 @@ class DictionaryItemModel(QAbstractTableModel):
         for dictionary in self._dictionary_list:
             for strokes, translation in dictionary.items():
                 if strokes_filter is not None and \
-                   not '/'.join(strokes).startswith(strokes_filter):
+                   not strokes.startswith(strokes_filter):
                     continue
                 if translation_filter is not None and \
                    not translation.startswith(translation_filter):
@@ -171,7 +171,7 @@ class DictionaryItemModel(QAbstractTableModel):
         item = self._entries[index.row()]
         column = index.column()
         if column == _COL_STENO:
-            return '/'.join(item.strokes)
+            return item.strokes
         if column == _COL_TRANS:
             return escape_translation(item.translation)
         if column == _COL_DICT:
@@ -210,7 +210,7 @@ class DictionaryItemModel(QAbstractTableModel):
         old_item = self._entries[row]
         strokes, translation, dictionary = old_item
         if column == _COL_STENO:
-            strokes = normalize_steno(value.strip())
+            strokes = '/'.join(normalize_steno(value.strip()))
             if not strokes or strokes == old_item.strokes:
                 return False
         elif column == _COL_TRANS:

@@ -76,7 +76,7 @@ def replay(blackbox, name, test):
     for steno, translation in ast.literal_eval(
         '{' + definitions + '}'
     ).items():
-        blackbox.dictionary.set(normalize_steno(steno), translation)
+        blackbox.dictionary.set(steno, translation)
     # Track line number for a more user-friendly assertion message.
     lines = test.split('\n')
     lnum = len(lines)-3 - test.rstrip().rsplit('\n\n', 1)[1].count('\n')

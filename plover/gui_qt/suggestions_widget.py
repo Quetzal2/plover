@@ -40,11 +40,11 @@ class SuggestionsWidget(QWidget, Ui_SuggestionsWidget):
             if not suggestion.steno_list:
                 cursor.insertText(' ' + _('no suggestions'))
                 continue
-            for strokes_list in suggestion.steno_list[:10]:
+            for strokes in suggestion.steno_list[:10]:
                 cursor.insertBlock()
                 cursor.setCharFormat(self._strokes_char_format)
                 cursor.block().setUserState(self.STYLE_STROKES)
-                cursor.insertText('   ' + '/'.join(strokes_list))
+                cursor.insertText('   ' + strokes)
         cursor.insertText('\n')
         # Keep current position when not at the end of the document, or if the argument says so
         # Otherwise, scroll the window down to keep the new suggestions in view

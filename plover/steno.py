@@ -47,8 +47,8 @@ def sort_steno_keys(steno_keys):
     return sorted(steno_keys, key=system.KEY_ORDER.__getitem__)
 
 def sort_steno_strokes(strokes_list):
-    '''Return suggestions, sorted by fewest strokes, then fewest keys.'''
-    return sorted(strokes_list, key=lambda x: (len(x), sum(map(len, x))))
+    """ Return suggestions, sorted by fewest strokes, then fewest keys. """
+    return sorted(strokes_list, key=lambda x: (sum(c == "/" for c in x), len(x)))
 
 
 class Stroke(set):

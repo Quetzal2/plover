@@ -980,10 +980,10 @@ class TestsBlackbox(BlackboxTester):
     def test_upper6(self):
         r'''
         'TP*U': '{<}',
-        'P-': '{foo^}',
+        'P': '{foo^}',
         '-S': '{^bar}',
 
-        TP*U/P-/-S  " FOOBAR"
+        TP*U/P/-S  " FOOBAR"
         '''
 
     def test_upper7(self):

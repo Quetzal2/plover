@@ -6,7 +6,6 @@ import ast
 import pytest
 
 from plover.dictionary.rtfcre_dict import RtfDictionary, format_translation
-from plover.steno import normalize_steno
 
 from . import parametrize
 from .utils import make_dict
@@ -207,13 +206,10 @@ def test_rtf_load(test_case):
     if isinstance(test_case, tuple):
         # Translation conversion test.
         rtf_entries = r'{\*\cxs S}' + test_case[0]
-        dict_entries = { normalize_steno('S'): test_case[1] }
+        dict_entries = {'S': test_case[1]}
     else:
         rtf_entries, dict_entries = test_case.rsplit('\n\n', 1)
-        dict_entries = {
-            normalize_steno(k): v
-            for k, v in ast.literal_eval('{' + dict_entries + '}').items()
-        }
+        dict_entries = ast.literal_eval('{' + dict_entries + '}')
     rtf_styles = {
         0: 'Normal',
         1: 'Question',
