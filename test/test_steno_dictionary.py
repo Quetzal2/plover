@@ -14,54 +14,33 @@ from plover.steno_dictionary import StenoDictionary, StenoDictionaryCollection
 
 
 def test_dictionary():
-    notifications = []
-    def listener(longest_key):
-        notifications.append(longest_key)
 
     d = StenoDictionary()
-    assert d.longest_key == 0
     assert len(d) == 0
     assert not d
 
-    d.add_longest_key_listener(listener)
     d['S'] = 'a'
-    assert d.longest_key == 1
     assert 'S' in d
-    assert notifications == [1]
     assert len(d) == 1
     assert d
     d['S/S/S/S'] = 'b'
-    assert d.longest_key == 4
-    assert notifications == [1, 4]
     assert len(d) == 2
     d['S/S'] = 'c'
-    assert d.longest_key == 4
     assert d['S/S'] == 'c'
-    assert notifications == [1, 4]
     assert len(d) == 3
     del d['S/S/S/S']
-    assert d.longest_key == 2
-    assert notifications == [1, 4, 2]
     assert len(d) == 2
     del d['S']
-    assert d.longest_key == 2
     assert 'S' not in d
-    assert notifications == [1, 4, 2]
     assert len(d) == 1
     assert d.reverse_lookup('c') == ['S/S']
     assert d.casereverse_lookup('c') == ['c']
     d.clear()
-    assert d.longest_key == 0
-    assert notifications == [1, 4, 2, 0]
     assert len(d) == 0
     assert not d
     assert d.reverse_lookup('c') == []
     assert d.casereverse_lookup('c') == []
-
-    d.remove_longest_key_listener(listener)
     d['S/S'] = 'c'
-    assert d.longest_key == 2
-    assert notifications == [1, 4, 2, 0]
 
 
 def test_dictionary_update():
@@ -145,42 +124,6 @@ def test_dictionary_collection_writeable():
     dc.set('S', 'A')
     assert d1['S'] == 'A'
     assert d2['S'] == 'c'
-
-
-def test_dictionary_collection_longest_key():
-
-    k1 = 'S'
-    k2 = 'S/T'
-    k3 = 'S/T/R'
-
-    dc = StenoDictionaryCollection()
-    assert dc.longest_key == 0
-
-    d1 = StenoDictionary()
-    d1.path = 'd1'
-    d1[k1] = 'a'
-
-    dc.set_dicts([d1])
-    assert dc.longest_key == 1
-
-    d1[k2] = 'a'
-    assert dc.longest_key == 2
-
-    d2 = StenoDictionary()
-    d2.path = 'd2'
-    d2[k3] = 'c'
-
-    dc.set_dicts([d2, d1])
-    assert dc.longest_key == 3
-
-    del d1[k2]
-    assert dc.longest_key == 3
-
-    dc.set_dicts([d1])
-    assert dc.longest_key == 1
-
-    dc.set_dicts([])
-    assert dc.longest_key == 0
 
 
 def test_casereverse_del():

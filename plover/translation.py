@@ -181,7 +181,8 @@ class Translator:
     output to every function that has registered via the add_callback method.
 
     """
-    def __init__(self):
+    def __init__(self, stroke_limit=KEY_STROKE_LIMIT):
+        self._stroke_limit = stroke_limit
         self._undo_length = 0
         self._dictionary = None
         self.set_dictionary(StenoDictionaryCollection())
@@ -197,11 +198,7 @@ class Translator:
 
     def set_dictionary(self, d):
         """Set the dictionary."""
-        callback = self._dict_callback
-        if self._dictionary:
-            self._dictionary.remove_longest_key_listener(callback)
         self._dictionary = d
-        d.add_longest_key_listener(callback)
 
     def get_dictionary(self):
         return self._dictionary
@@ -261,7 +258,7 @@ class Translator:
             callback(undo, do, prev)
 
     def _resize_translations(self):
-        self._state.restrict_size(max(self._dictionary.longest_key,
+        self._state.restrict_size(max(self._stroke_limit,
                                       self._undo_length))
 
     def _dict_callback(self, value):
@@ -324,13 +321,12 @@ class Translator:
 
     def _find_translation(self, stroke, normal=True, suffixes=(), prefixes=()):
         # Figure out how much of the translation buffer can be involved in this stroke and
-        # build the stroke list for translation. The longest key with an entry in the
-        # dictionary provides a limit to how many strokes we need to try lookups on.
+        # build the stroke list for translation.
         num_strokes = 1
         translation_count = 0
         for t in reversed(self._state.translations):
             num_strokes += len(t)
-            if num_strokes > KEY_STROKE_LIMIT:
+            if num_strokes > self._stroke_limit:
                 break
             translation_count += 1
         translation_index = len(self._state.translations) - translation_count

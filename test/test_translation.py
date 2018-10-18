@@ -43,61 +43,33 @@ class TestTranslatorStateSize:
 
         def __init__(self):
             _State.__init__(self)
-            self.restrict_calls = []
+            self.last_restrict_call = None
 
         def restrict_size(self, n):
-            self.restrict_calls.append(n)
+            self.last_restrict_call = n
 
     def _check_size_call(self, size):
-        assert self.s.restrict_calls[-1] == size
-
-    def _check_no_size_call(self):
-        assert self.s.restrict_calls == []
-
-    def clear(self):
-        self.s.restrict_calls = []
+        assert self.s.last_restrict_call == size
 
     def setup_method(self):
-        self.t = Translator()
+        self.stroke_limit = 8
+        self.t = Translator(self.stroke_limit)
         self.s = type(self).FakeState()
         self.t._state = self.s
         self.d = StenoDictionary()
         self.dc = StenoDictionaryCollection([self.d])
         self.t.set_dictionary(self.dc)
 
-    def test_dictionary_update_grows_size1(self):
-        self.d['S'] = '1'
-        self._check_size_call(1)
-
-    def test_dictionary_update_grows_size4(self):
-        self.d['S/PT/-Z/TOP'] = 'hi'
-        self._check_size_call(4)
-
-    def test_dictionary_update_no_grow(self):
-        self.t.set_min_undo_length(4)
-        self._check_size_call(4)
-        self.clear()
-        self.d['S/T'] = 'nothing'
-        self._check_size_call(4)
-
-    def test_dictionary_update_shrink(self):
-        self.d['S/T/P/-Z/-D'] = '1'
-        self._check_size_call(5)
-        self.clear()
-        self.d['A/P'] = '2'
-        self._check_no_size_call()
-        del self.d['S/T/P/-Z/-D']
-        self._check_size_call(2)
-
-    def test_dictionary_update_no_shrink(self):
-        self.t.set_min_undo_length(7)
-        self.d['S/T/P/-Z/-D'] = '1'
-        del self.d['S/T/P/-Z/-D']
-        self._check_size_call(7)
-
-    def test_translation_calls_restrict(self):
-        self.t.translate(stroke('S'))
-        self._check_size_call(0)
+    def test_size(self):
+        limit = self.stroke_limit
+        self.t.set_min_undo_length(limit+5)
+        self._check_size_call(limit+5)
+        self.t.set_min_undo_length(limit+2)
+        self._check_size_call(limit+2)
+        self.t.set_min_undo_length(limit-5)
+        self._check_size_call(limit)
+        self.t.set_min_undo_length(limit-2)
+        self._check_size_call(limit)
 
 
 def test_listeners():
@@ -109,7 +81,7 @@ def test_listeners():
     def listener2(undo, do, prev):
         output2.append((undo, do, prev))
 
-    t = Translator()
+    t = Translator(stroke_limit=1)
     s = stroke('S')
     tr = Translation([s], None)
     expected_output = [([], [tr], [tr])]
@@ -183,10 +155,10 @@ def test_changing_state():
 
     del output[:]
     t.set_state(s)
-    t.translate(stroke('P'))
+    t.translate(stroke('K'))
     assert output == [([],
-                       [Translation([stroke('P')], None)],
-                       [Translation([stroke('S'), stroke('P')], 'hi')])]
+                       [Translation([stroke('K')], None)],
+                       [Translation([stroke('T')], None), Translation([stroke('S'), stroke('P')], 'hi')])]
 
 
 def test_translator():
@@ -217,7 +189,7 @@ def test_translator():
 
     d = StenoDictionary()
     out = Output()
-    t = Translator()
+    t = Translator(stroke_limit=5)
     dc = StenoDictionaryCollection([d])
     t.set_dictionary(dc)
     t.add_listener(out.write)
@@ -229,8 +201,10 @@ def test_translator():
     t.translate(stroke('*'))
     assert out.get() == 'S'
     t.translate(stroke('*'))
+    assert out.get() == ''
+    t.translate(stroke('*'))
     # Undo buffer ran out
-    assert out.get() == 'S ' + BACK_STRING
+    assert out.get() == BACK_STRING
 
     t.set_min_undo_length(3)
     out.clear()
@@ -301,15 +275,11 @@ def test_translator():
     d.clear()
 
     s = stroke('S')
-    t.translate(s)
-    t.translate(s)
-    t.translate(s)
-    t.translate(s)
+    for _ in range(6):
+        t.translate(s)
     s = stroke('*')
-    t.translate(s)
-    t.translate(s)
-    t.translate(s)
-    t.translate(s)
+    for _ in range(6):
+        t.translate(s)
     # Not enough undo to clear output.
     assert out.get() == 'S ' + BACK_STRING
 
@@ -498,15 +468,15 @@ class TestTranslateStroke:
         self._check_output([], self.lt('-T'), self.lt('S'))
         assert self.o.output.do[0].english == 'that'
 
-    def test_with_translation_2(self):
-        self.define('S', 'is')
-        self.define('-T', 'that')
-        self.s.translations = self.lt('S')
-        self.tlor.set_min_undo_length(1)
-        self.translate('-T')
-        self._check_translations(self.lt('-T'))
-        self._check_output([], self.lt('-T'), self.lt('S'))
-        assert self.o.output.do[0].english == 'that'
+    # def test_with_translation_2(self):
+    #     self.define('S', 'is')
+    #     self.define('-T', 'that')
+    #     self.s.translations = self.lt('S')
+    #     self.tlor.set_min_undo_length(1)
+    #     self.translate('-T')
+    #     self._check_translations(self.lt('-T'))
+    #     self._check_output([], self.lt('-T'), self.lt('S'))
+    #     assert self.o.output.do[0].english == 'that'
 
     def test_finish_two_translation(self):
         self.define('S/T', 'hello')
@@ -719,7 +689,7 @@ class TestTranslateStroke:
         self.translate('SKEL')
         self.translate('TOPB')
         self.translate('A*')
-        self._check_translations(self.lt('SKEL/TO*PB'))
+        self._check_translations(self.lt('P-P SKEL/TO*PB'))
         self._check_output(self.lt('SKEL/TO-PB'),
                           self.lt('SKEL/TO*PB'),
                           self.lt('P-P'))
@@ -734,7 +704,7 @@ class TestTranslateStroke:
         self.translate('SKEL')
         self.translate('TOPB')
         self.translate('A*')
-        self._check_translations(self.lt('SKEL TO*PB'))
+        self._check_translations(self.lt('P-P SKEL TO*PB'))
         self._check_output(self.lt('SKEL/TO-PB'),
                           self.lt('SKEL TO*PB'),
                           self.lt('P-P'))
